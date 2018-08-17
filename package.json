@@ -1,0 +1,30 @@
+{
+  "name": "@vladnet/codegraph",
+  "version": "1.0.0-a",
+  "description": "CodeGraph is a clean and simple node editor for visual coding.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "webpack-serve --port 8080 --content src"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ssh://dzunchik@vs-ssh.visualstudio.com:22/CodeGraph/_ssh/CodeGraph"
+  },
+  "author": "Vlad Sydorenko",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/webpack-env": "^1.13.6",
+    "css-loader": "^1.0.0",
+    "postcss-loader": "^3.0.0",
+    "postcss-scss": "^2.0.0",
+    "style-loader": "^0.22.1",
+    "ts-loader": "^4.4.2",
+    "typescript": "^3.0.1",
+    "webpack": "^4.16.5",
+    "webpack-serve": "^2.0.2"
+  },
+  "dependencies": {
+    "rxjs": "^6.2.2",
+    "rxjs-compat": "^6.2.2"
+  }
+}
