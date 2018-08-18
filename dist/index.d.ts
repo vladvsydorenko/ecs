@@ -4,8 +4,9 @@ export declare namespace ECS {
     export import SystemManager = sm.SystemManager;
     export import ISystem = sm.ISystem;
     export import EntityManager = em.EntityManager;
+    export import EEntityManagerEventTypes = em.EEntityManagerEventTypes;
     export import IEntity = em.IEntity;
     export import IEntityData = em.IEntityData;
-    export import IEntityManagerListenerFn = em.IEntityManagerListenerFn;
-    export import EEntityManagerEventTypes = em.EEntityManagerEventTypes;
+    export import TEntityManagerListenerFn = em.TEntityManagerListenerFn;
 }
+export default ECS;

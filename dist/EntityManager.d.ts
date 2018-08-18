@@ -6,7 +6,7 @@ export interface IEntityData {
     readonly id?: string;
     readonly [key: string]: any;
 }
-export declare type IEntityManagerListenerFn<T extends IEntity> = (entity: T) => any;
+export declare type TEntityManagerListenerFn<T extends IEntity> = (entity: T) => any;
 export declare enum EEntityManagerEventTypes {
     set = "set",
     unset = "unset"
@@ -23,7 +23,7 @@ export declare class EntityManager<T extends IEntity = IEntity> {
     });
     set(data: IEntityData): T;
     unset(entity: T): void;
-    on(event: EEntityManagerEventTypes, fn: IEntityManagerListenerFn<T>, context?: any): number;
+    on(event: EEntityManagerEventTypes, fn: TEntityManagerListenerFn<T>, context?: any): number;
     off(id: number): void;
     toArray(): T[];
     forEach(fn: (value: T, index: number, arr: T[]) => any): void;
