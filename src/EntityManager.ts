@@ -97,6 +97,14 @@ export class EntityManager<T extends IEntity = IEntity> {
         return this.toArray().find(fn);
     }
 
+    public some(fn: (value: T, index: number, arr: T[]) => any): boolean {
+        return this.toArray().some(fn);
+    }
+
+    public every(fn: (value: T, index: number, arr: T[]) => any): boolean {
+        return this.toArray().every(fn);
+    }
+
     private notify(event: EEntityManagerEventTypes, entity: T) {
         const listeners = this.listeners[event];
         if (!listeners) return;
