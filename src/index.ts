@@ -1,27 +1,19 @@
-import { List, EListEventTypes } from "./List";
+import { SystemManager } from "./SystemManager";
+import { List } from "./List";
 
-const list = new List();
+const em = new List();
+const sm = new SystemManager(em);
 
-const entity = list.set({
-    name: "Petroniy",
+const id = sm.add({
+    update(em: List) {
+        console.log("updated", em);
+    },
 });
 
-const id = list.on(EListEventTypes.set, entity => {
-    console.log("set", entity);
-}, this);
-const id2 = list.on(EListEventTypes.unset, entity => {
-    console.log("unset", entity);
-}, this);
-// list.off(id);
+sm.start();
 
-const item = list.set({
-    ...entity,
-    name: "Vasylka",
+em.set({
+    name: "Vasyl",
 });
-// list.unset(item);
 
-console.log(list.toArray());
-
-// list.unset(entity);
-
-// console.log(list);
+// console.log(sm);

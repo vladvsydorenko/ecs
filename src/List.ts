@@ -14,7 +14,7 @@ export enum EListEventTypes {
 interface IListListener<T extends IListItem> {
     id: number,
     fn: IListListenerFn<T>;
-    context: any; // fn's context
+    context: any; // fn's execution context
 }
 
 export class List<T extends IListItem = IListItem> {
