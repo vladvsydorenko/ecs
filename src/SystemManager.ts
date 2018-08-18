@@ -1,17 +1,18 @@
-import { List, IListItem, EListEventTypes } from "./List";
+import { EntityManager, IEntity, EEntityManagerEventTypes } from "./EntityManager";
 
 export interface ISystem {
-    update: (em: List<IListItem>) => any;
+    update: (em: EntityManager<IEntity>) => any;
 }
 
 interface ISystemContainer {
-    id: number; 
+    id: number;
     system: ISystem;
+    lastUpdated: number;
 }
 
 export class SystemManager {
 
-    private em: List<IListItem>;
+    private em: EntityManager<IEntity>;
     private systems: ISystemContainer[] = [];
     private emListenerIds: number[] = [];
 
@@ -21,13 +22,14 @@ export class SystemManager {
 
 
 
-    constructor(em: List = new List<IListItem>()) {
+    constructor(em: EntityManager = new EntityManager<IEntity>()) {
         this.em = em;
     }
 
     public start() {
-        this.emListenerIds.push(this.em.on(EListEventTypes.set, this.onUpdate, this));
-        this.emListenerIds.push(this.em.on(EListEventTypes.unset, this.onUpdate, this));
+        this.emListenerIds.push(this.em.on(EEntityManagerEventTypes.set, this.onUpdate, this));
+        this.emListenerIds.push(this.em.on(EEntityManagerEventTypes.unset, this.onUpdate, this));
+        if (this.em.length > 0) this.update();
     }
 
     public stop() {
@@ -38,7 +40,8 @@ export class SystemManager {
         const id = this.nextSystemId++;
         this.systems.push({
             id,
-            system
+            system,
+            lastUpdated: null,
         })
         return id;
     }
@@ -55,9 +58,12 @@ export class SystemManager {
     }
 
     public update() {
+        const { em } = this;
         this.isInUpdate = true;
-        this.systems.forEach(system => {
-            system.system.update(this.em);
+        this.systems.forEach(container => {
+            if (container.lastUpdated === em.lastUpdated) return;
+            container.system.update(em);
+            container.lastUpdated = em.lastUpdated;
         });
         this.isInUpdate = false;
     }
@@ -69,7 +75,7 @@ export class SystemManager {
         }
 
         clearTimeout(this.updateTimeoutId);
-        this.updateTimeoutId = setTimeout(this.onUpdate);
+        this.updateTimeoutId = setTimeout(() => this.onUpdate());
     }
 
 }

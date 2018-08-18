@@ -1,19 +1,12 @@
-import { SystemManager } from "./SystemManager";
-import { List } from "./List";
+import * as sm from "./SystemManager";
+import * as em from "./EntityManager";
 
-const em = new List();
-const sm = new SystemManager(em);
-
-const id = sm.add({
-    update(em: List) {
-        console.log("updated", em);
-    },
-});
-
-sm.start();
-
-em.set({
-    name: "Vasyl",
-});
-
-// console.log(sm);
+export namespace ECS {
+    export import SystemManager = sm.SystemManager;
+    export import ISystem = sm.ISystem;
+    export import EntityManager = em.EntityManager;
+    export import IEntity = em.IEntity;
+    export import IEntityData = em.IEntityData;
+    export import IEntityManagerListenerFn = em.IEntityManagerListenerFn;
+    export import EEntityManagerEventTypes = em.EEntityManagerEventTypes;
+};
