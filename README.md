@@ -87,3 +87,47 @@ em.on(ECS.EEntityManagerEventTypes.unset, (entity: ECS.IEntity) => {
 
 ## Systems
 
+To manage you entities you should write a system.
+System is just an object having `update` method and optional `start` method.
+
+```ts
+interface ISystem {
+    update: (em: EntityManager<IEntity>) => any;
+    start?: (em: EntityManager<IEntity>) => any;
+}
+```
+
+```ts
+const em = new ECS.EntityManager();
+const sm = new ECS.SystemManager(em);
+
+// add a system
+const id = sm.add({
+    update(em) {
+        em
+            .filter(entity => entity.name === "Vasylko")
+            .forEach(entity => {
+                console.log(`Another one ${entity.name}!`);
+            });
+    }
+});
+
+// remove a system
+sm.remove(id);
+```
+
+`update` will be run each time entity manager changes (both `set` or `unset` actions).  It will not run again for system own changes. SystemManager saves timestamp when its EntityManager and systems were updated.
+
+`start` will be run only once at SystemManager start.
+
+### Asynchronous
+Systems are asynchronous, means you could update EntityManager at anytime and all other systems will update.
+
+### Start/Stop
+```
+// start all systems
+sm.start();
+
+// stop all systems
+sm.stop();
+```

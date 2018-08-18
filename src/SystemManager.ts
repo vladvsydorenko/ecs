@@ -2,6 +2,7 @@ import { EntityManager, IEntity, EEntityManagerEventTypes } from "./EntityManage
 
 export interface ISystem {
     update: (em: EntityManager<IEntity>) => any;
+    start?: (em: EntityManager<IEntity>) => any;
 }
 
 interface ISystemContainer {
@@ -20,16 +21,16 @@ export class SystemManager {
     private nextSystemId = 0;
     private updateTimeoutId: number = null;
 
-
-
-    constructor(em: EntityManager = new EntityManager<IEntity>()) {
+    constructor(em: EntityManager) {
         this.em = em;
     }
 
     public start() {
-        this.emListenerIds.push(this.em.on(EEntityManagerEventTypes.set, this.onUpdate, this));
-        this.emListenerIds.push(this.em.on(EEntityManagerEventTypes.unset, this.onUpdate, this));
-        if (this.em.length > 0) this.update();
+        const { em } = this;
+        this.systems.forEach(({ system }) => system.start && system.start(em));
+        this.emListenerIds.push(em.on(EEntityManagerEventTypes.set, this.onUpdate, this));
+        this.emListenerIds.push(em.on(EEntityManagerEventTypes.unset, this.onUpdate, this));
+        if (this.systems.length > 0 && this.em.length > 0) this.update();
     }
 
     public stop() {
