@@ -10,10 +10,7 @@ Simple ecs implementation, inspired by [Unity3d ECS](https://unity3d.com/learn/t
 `yarn add @vladnet/ecs`
 
 ```ts
-import { ECS } from "@vladnet/ecs";
-
-const em = new ECS.EntityManager();
-const sm = new ECS.SystemManager(em);
+import { EntityManager, SystemManager } from "@vladnet/ecs";
 ```
 
 ## Entities
@@ -75,12 +72,12 @@ Sure thing, you can get plain array by `em.toArray()`.
 You could subscribe to `set` or `unset` events.
 ```ts
 // on set
-em.on(ECS.EEntityManagerEventTypes.set, (entity: ECS.IEntity) => {
+em.on(EEntityManagerEventTypes.set, (entity: IEntity) => {
     // entity was set (new or updated)
 }, context /* `this` for listener */);
 
 // on unset
-em.on(ECS.EEntityManagerEventTypes.unset, (entity: ECS.IEntity) => {
+em.on(EEntityManagerEventTypes.unset, (entity: IEntity) => {
     // entity was unset, do forget it and move forward
 }, context /* `this` for listener */);
 ```
@@ -98,8 +95,8 @@ interface ISystem {
 ```
 
 ```ts
-const em = new ECS.EntityManager();
-const sm = new ECS.SystemManager(em);
+const em = new EntityManager();
+const sm = new SystemManager(em);
 
 // add a system
 const id = sm.add({

@@ -1,7 +1,7 @@
-import { ECS } from "../src";
+import { EntityManager, SystemManager, IEntity } from "../src";
 
-const em = new ECS.EntityManager();
-const sm = new ECS.SystemManager(em);
+const em = new EntityManager();
+const sm = new SystemManager(em);
 
 sm.add({
     update(em) {

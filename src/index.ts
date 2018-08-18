@@ -1,12 +1,15 @@
-import * as sm from "./SystemManager";
-import * as em from "./EntityManager";
+// import { SystemManager, ISystem } from "./SystemManager";
+// import { EntityManager, EEntityManagerEventTypes, IEntity, IEntityData, IEntityManagerListenerFn } from "./EntityManager";
 
-export namespace ECS {
-    export import SystemManager = sm.SystemManager;
-    export import ISystem = sm.ISystem;
-    export import EntityManager = em.EntityManager;
-    export import IEntity = em.IEntity;
-    export import IEntityData = em.IEntityData;
-    export import IEntityManagerListenerFn = em.IEntityManagerListenerFn;
-    export import EEntityManagerEventTypes = em.EEntityManagerEventTypes;
-};
+export { 
+    EntityManager,
+    IEntity,
+    IEntityData,
+    TEntityManagerListenerFn,
+    EEntityManagerEventTypes
+} from "./EntityManager";
+
+export { 
+    SystemManager,
+    ISystem
+} from "./SystemManager";

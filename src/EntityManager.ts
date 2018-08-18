@@ -7,7 +7,7 @@ export interface IEntityData {
     readonly [key: string]: any;
 };
 
-export type IEntityManagerListenerFn<T extends IEntity> = (entity: T) => any;
+export type TEntityManagerListenerFn<T extends IEntity> = (entity: T) => any;
 
 export enum EEntityManagerEventTypes {
     set = "set",
@@ -16,7 +16,7 @@ export enum EEntityManagerEventTypes {
 
 interface IEntityManagerListener<T extends IEntity> {
     id: number,
-    fn: IEntityManagerListenerFn<T>;
+    fn: TEntityManagerListenerFn<T>;
     context: any; // fn's execution context
 }
 
@@ -56,7 +56,7 @@ export class EntityManager<T extends IEntity = IEntity> {
         this.notify(EEntityManagerEventTypes.unset, entity);
     }
 
-    public on(event: EEntityManagerEventTypes, fn: IEntityManagerListenerFn<T>, context?: any): number {
+    public on(event: EEntityManagerEventTypes, fn: TEntityManagerListenerFn<T>, context?: any): number {
         const id = this.nextListenerId++;
         const listeners = this.listeners[event] || (this.listeners[event] = []);
         listeners.push({
