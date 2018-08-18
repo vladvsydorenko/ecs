@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://dzunchik.visualstudio.com/ecs/_git/ecs"
+    "url": "https://github.com/vladvsydorenko/ecs.git"
   },
   "author": "Vlad Sydorenko",
   "license": "ISC",
