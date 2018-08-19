@@ -1,0 +1,1 @@
+import { IEntityManager } from "./IEntityManager";
