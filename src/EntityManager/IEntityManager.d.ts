@@ -1,15 +1,12 @@
-import { IEntity } from "./IEntity";
 import { EEntityManagerEventTypes, TEntityManagerListenerFn } from "./types";
 
-export interface IEntityManager<T, U> {
+export interface IEntityManager<T, U = T> {
     set: (entity: U) => T;
-    get: (id: string | T) => IEntity | undefined;
+    get: (id: string | T) => T | undefined;
     has: (id: string | T) => boolean;
-    unset: (id: string | T) => IEntity | undefined;
-    // remove all entities
-    clear: () => void;
+    unset: (id: string | T) => T | undefined;
 
-    on: (event: EEntityManagerEventTypes, fn: TEntityManagerListenerFn, context?: any) => string;
+    on: (event: EEntityManagerEventTypes, fn: TEntityManagerListenerFn<T>, context?: any) => string;
     off: (listenerId: string) => void;
 
     // listen to parent updates
@@ -17,5 +14,5 @@ export interface IEntityManager<T, U> {
     // stop listen to parent updates
     detach: () => void;
 
-    filter: (fn: (entity: IEntity) => boolean) => IEntityManager<T, U>;
+    filter: (fn: (entity: T) => boolean) => IEntityManager<T, U>;
 }

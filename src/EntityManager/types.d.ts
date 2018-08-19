@@ -1,6 +1,4 @@
-import { IEntity } from "./IEntity";
-
-export type TEntityManagerListenerFn = (entity: IEntity) => any;
+export type TEntityManagerListenerFn<T> = (entity: T) => any;
 
 export enum EEntityManagerEventTypes {
     set = "set",
