@@ -20,6 +20,8 @@ export class EntityManager<T extends IEntity = IEntity, U extends IEntity = T> i
     private listeners: { [event: string]: IEntityManagerListener<T>[] } = {};
     private listenersMap: { [listenerId: string]: string; }; // map listenerId -> event name
 
+    private entities: T[];
+
     private nextEntityId = 0;
     private nextListenerId = 0;
 
@@ -39,6 +41,8 @@ export class EntityManager<T extends IEntity = IEntity, U extends IEntity = T> i
         };
         container.entity = entity;
         if (isNew) this.containers.push(container);
+        this.notify(EEntityManagerEventTypes.set, entity);
+        this.render();
         return entity;
     }
 
@@ -58,7 +62,13 @@ export class EntityManager<T extends IEntity = IEntity, U extends IEntity = T> i
         const index = this.containers.indexOf(container);
         if (index > -1) this.containers.splice(index, 1);
         delete this.containersMap[id];
+        this.notify(EEntityManagerEventTypes.unset, container.entity);
+        this.render();
         return container.entity;
+    }
+
+    public toArray() {
+        return this.entities;
     }
 
     public on(event: EEntityManagerEventTypes, fn: TEntityManagerListenerFn<T>, context?: any): string {
@@ -102,6 +112,19 @@ export class EntityManager<T extends IEntity = IEntity, U extends IEntity = T> i
 
     public filter(fn: (entity: T) => boolean): IEntityManager<T, U> {
         return new EntityManager<T, U>();
+    }
+
+    private notify(event: EEntityManagerEventTypes, entity: T) {
+        const listeners = this.listeners[event];
+        if (!listeners) return;
+        listeners.forEach(listener => {
+            listener.context ? 
+                listener.fn.call(listener.context, entity) : listener.fn(entity);
+        });
+    }
+
+    private render(): T[] {
+        return this.entities = this.containers.map(({ entity }) => entity);
     }
 
 }

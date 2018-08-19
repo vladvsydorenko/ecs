@@ -14,5 +14,7 @@ export interface IEntityManager<T, U = T> {
     // stop listen to parent updates
     detach: () => void;
 
+    toArray: () => T[];
+
     filter: (fn: (entity: T) => boolean) => IEntityManager<T, U>;
 }
