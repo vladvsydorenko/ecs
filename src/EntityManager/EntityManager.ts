@@ -18,7 +18,7 @@ export class EntityManager<T extends IEntity = IEntity, U extends IEntity = T> i
     private containersMap: { [entityId: string]: IEntityContainer<T>; } = {};
 
     private listeners: { [event: string]: IEntityManagerListener<T>[] } = {};
-    private listenersMap: { [listenerId: string]: string; }; // map listenerId -> event name
+    private listenersMap: { [listenerId: string]: string; } = {}; // map listenerId -> event name
 
     private entities: T[];
 
