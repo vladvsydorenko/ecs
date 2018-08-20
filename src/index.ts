@@ -1,27 +1,28 @@
 import { EntityList, EEntityListEventTypes } from "./EntityList";
 
-const el = new EntityList();
-
-el.on(EEntityListEventTypes.set, entity => {
-    console.log("entity", entity);
+const el = new EntityList("id");
+const el2 = el.pipe(entity => {
+    return typeof entity.name === "string";
 });
-el.on(EEntityListEventTypes.unset, entity => {
-    console.log("unset entity", entity);
+const el3 = el2.pipe(entity => {
+    return {
+        id: entity.id,
+        name: `Mapped ${entity.name}`
+    };
+});
+
+el.set({
+    name: 20,
 });
 
 el.set({
     name: "Vasyl",
 });
 
-const e2 = el.set({
-    name: "Vasyl Again",
-});
-
-el.unset(e2);
-
 el.set({
     name: "Vasyl",
 });
 
-
-console.log(el);
+console.log(el.toArray());
+console.log(el2.toArray());
+console.log(el3.toArray());
