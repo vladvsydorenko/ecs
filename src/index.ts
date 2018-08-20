@@ -1,20 +1,27 @@
-import { EntityList } from "./Entity/EntityList";
+import { EntityList, EEntityListEventTypes } from "./EntityList";
 
 const el = new EntityList();
-const el2 = el.pipe({
-    filter: (entity) => typeof entity.name === "string"
-});
 
-el2.on("set", (entity) => {
+el.on(EEntityListEventTypes.set, entity => {
     console.log("entity", entity);
 });
-
-el.set({
-    name: "Vasylko",
+el.on(EEntityListEventTypes.unset, entity => {
+    console.log("unset entity", entity);
 });
 
 el.set({
-    name2: "Vasylko",
+    name: "Vasyl",
 });
 
-console.log(el2);
+const e2 = el.set({
+    name: "Vasyl Again",
+});
+
+el.unset(e2);
+
+el.set({
+    name: "Vasyl",
+});
+
+
+console.log(el);
