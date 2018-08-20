@@ -1,32 +1,20 @@
-import { EntityManager } from "./EntityManager";
-import { EEntityManagerEventTypes } from "./EntityManager/types";
+import { EntityList } from "./Entity/EntityList";
 
-const em = new EntityManager<{ [key: string]: any }>();
-
-em.on(EEntityManagerEventTypes.set, entity => {
-    console.log("set 1");
+const el = new EntityList();
+const el2 = el.pipe({
+    filter: (entity) => typeof entity.name === "string"
 });
 
-em.on(EEntityManagerEventTypes.unset, entity => {
-    console.log("unset 1");
+el2.on("set", (entity) => {
+    console.log("entity", entity);
 });
 
-const em2 = em.pipe((entity) => {
-    return entity.type === "userInput";
+el.set({
+    name: "Vasylko",
 });
 
-em2.on(EEntityManagerEventTypes.set, entity => {
-    console.log("so it works?", entity);
+el.set({
+    name2: "Vasylko",
 });
 
-em.set({
-    type: "userInput",
-    name: "down",
-});
-
-const up = em2.set({
-    type: "userInput",
-    name: "Up",
-});
-
-em2.unset(up);
+console.log(el2);
