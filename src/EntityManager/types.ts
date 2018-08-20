@@ -9,4 +9,4 @@ export enum EEntityManagerEventTypes {
 
 export type TEntityManagerListenerFn<T> = (entity: Readonly<T>) => any;
 
-// export type TEntityManager
+export type TEntityManagerParentFilter<T> = (entity: Readonly<T>) => boolean;
