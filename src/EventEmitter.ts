@@ -1,60 +1,61 @@
-interface IListener<T> {
+interface IEventListenerContainer<T_Data> {
     id: number;
-    fn: TListenerFn<T>;
-    context: any;
+    eventId: string;
+    listener: TEventListener<T_Data>;
+    thisArg: any;
 }
 
-interface IlistenerContainer<T> {
-    eventType: string;
-    listener: IListener<T>;
-}
+export type TEventListener<T_Data> = (data: T_Data) => any;
 
-export type TListenerFn<T_Data> = (data: T_Data) => any;
+export class EventEmitter<T_Data> {
 
-export class EventEmitter<T_Data = any> {
+    private listenerContainers: { [listenerId: number]: IEventListenerContainer<T_Data>; } = {};
+    private eventIdToListenersMap: { [eventId: string]: IEventListenerContainer<T_Data>[]; } = {};
 
-    private listeners: { [eventType: string]: IListener<T_Data>[]; } = {};
-    private listenersMap: { [listenerId: string]: IlistenerContainer<T_Data> } = {}; // `listener id => event name` map
     private nextListenerId = 0;
 
-    public on(eventType: string, fn: TListenerFn<T_Data>, context?: any): number {
-        const listeners = this.listeners[eventType] || (this.listeners[eventType] = []);
+    public on(eventId: string, listener: TEventListener<T_Data>, thisArg?: any): number {
+        if (!this.eventIdToListenersMap[eventId]) this.eventIdToListenersMap[eventId] = [];
 
-        const id = this.nextListenerId;
-        this.nextListenerId += 1;
-
-        const listener = { id, fn, context }
-        listeners.push(listener);
-        this.listenersMap[id] = {
-            eventType,
-            listener
+        const id = this.nextListenerId++
+        const container = {
+            id,
+            listener,
+            thisArg,
+            eventId,
         };
+
+        this.eventIdToListenersMap[eventId].push(container);
+        this.listenerContainers[id] = container;
 
         return id;
     }
 
-    public off(listenerId: number): void {
-        const meta = this.listenersMap[listenerId];
+    public off(listenerId: number) {
+        const listener = this.listenerContainers[listenerId];
 
-        if (!meta) return;
+        if (!listener) throw new Error(`There is no listener with id "${listenerId}"`);
 
-        const listeners = this.listeners[meta.eventType];
-        const index = listeners.indexOf(meta.listener);
+        const listeners = this.eventIdToListenersMap[listener.eventId]
 
-        if (index === -1) return;
-
+        const index = listeners.indexOf(listener);
         listeners.splice(index, 1);
-        delete this.listenersMap[listenerId];
 
-        if (listeners.length === 0) delete this.listeners[meta.eventType];
+        delete this.listenerContainers[listenerId];
     }
 
-    public emit(event: string, data: T_Data): void {
-        const listeners = this.listeners[event];
-
+    public emit(eventId: string, data: T_Data) {
+        const listeners = this.eventIdToListenersMap[eventId];
         if (!listeners) return;
 
-        listeners.forEach(({ fn, context }) => fn.call(context, data));
+        listeners
+            .forEach(({ listener, thisArg }) => {
+                listener.call(thisArg, data);
+            });
     }
 
+    public clear() {
+        this.listenerContainers = {};
+        this.eventIdToListenersMap = {};
+    }
 }

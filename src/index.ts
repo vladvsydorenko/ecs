@@ -1,14 +1,16 @@
-export {
-    EntityList,
-    EEntityListEventTypes,
-    TEntityListTransform
-} from "./EntityList";
+import { EventEmitter } from "./EventEmitter";
 
-export {
-    EntityListBase
-} from "./EntityListBase";
+const ee = new EventEmitter<string>();
 
-export {
-    EventEmitter,
-    TListenerFn
-} from "./EventEmitter";
+ee.on("set", data => {
+    console.log("its data", data);
+});
+
+const id = ee.on("set", data => {
+    console.log("its data 2", data);
+});
+
+ee.off(id);
+ee.clear();
+
+ee.emit("set", "hi");
