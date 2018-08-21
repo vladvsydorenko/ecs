@@ -4,19 +4,20 @@ interface IListener<T> {
     context: any;
 }
 
-interface IListenerMapValue<T> {
+interface IlistenerContainer<T> {
     eventType: string;
     listener: IListener<T>;
 }
 
-export type TListenerFn<T> = (data: T) => any;
-export class EventEmitter<T> {
+export type TListenerFn<T_Data> = (data: T_Data) => any;
 
-    private listeners: { [eventType: string]: IListener<T>[]; } = {};
-    private listenersMap: { [listenerId: string]: IListenerMapValue<T> } = {}; // `listener id => event name` map
+export class EventEmitter<T_Data = any> {
+
+    private listeners: { [eventType: string]: IListener<T_Data>[]; } = {};
+    private listenersMap: { [listenerId: string]: IlistenerContainer<T_Data> } = {}; // `listener id => event name` map
     private nextListenerId = 0;
 
-    public on(eventType: string, fn: TListenerFn<T>, context?: any): number {
+    public on(eventType: string, fn: TListenerFn<T_Data>, context?: any): number {
         const listeners = this.listeners[eventType] || (this.listeners[eventType] = []);
 
         const id = this.nextListenerId;
@@ -48,7 +49,7 @@ export class EventEmitter<T> {
         if (listeners.length === 0) delete this.listeners[meta.eventType];
     }
 
-    public emit(event: string, data: T): void {
+    public emit(event: string, data: T_Data): void {
         const listeners = this.listeners[event];
 
         if (!listeners) return;
