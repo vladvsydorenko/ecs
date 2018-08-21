@@ -73,9 +73,31 @@ export class EntityListBase<
         return container.entity;
     }
 
+    public setMany(datas: any[]) {
+        datas.forEach(this.set, this);
+    }
+
     public toArray(): ReadonlyArray<Readonly<T_Entity>> {
         if (this.renderTime < this.updateTime) this.render();
         return this.renderedEntities;
+    }
+
+    protected setLocalExact(entity: T_Entity) {
+        const entityId = (entity as any)[this.idKey];
+        let container = this.entityContainersMap[entityId];
+
+        // if new entity
+        if (!container) {
+            container = this.entityContainersMap[entityId] = { entity: null };
+            this.entityContainers.push(container);
+            this.length++;
+        }
+
+        container.entity = entity;
+        this.updateTime = Date.now();
+
+        return entity;
+
     }
 
     private findId(data: T_Entity | string): string | undefined {

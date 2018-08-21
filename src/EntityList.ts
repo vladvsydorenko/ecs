@@ -65,7 +65,7 @@ export class EntityList<T_Entity> extends EntityListBase<T_Entity> {
                 }
             }
             else entity = data;
-            if (entity) this.setLocal(entity);
+            if (entity) this.setLocalExact(entity);
         });
         this.parentUnsetListenerId = parent.on(EEntityListEventTypes.unset, data => this.unsetLocal(data));
 
