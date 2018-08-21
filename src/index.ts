@@ -1,28 +1,21 @@
-import { EntityList, EEntityListEventTypes } from "./EntityList";
+import { EntityList, EEntityListEventTypes } from "./SmartEntityList";
 
-const el = new EntityList("id");
-const el2 = el.pipe(entity => {
-    return typeof entity.name === "string";
-});
-const el3 = el2.pipe(entity => {
-    return {
-        id: entity.id,
-        name: `Mapped ${entity.name}`
-    };
+const el = new EntityList({});
+
+el.on(EEntityListEventTypes.set, entity => {
+    console.log(entity);
 });
 
 el.set({
-    name: 20,
+    test: "Test"
 });
-
-el.set({
-    name: "Vasyl",
+const entity = el.set({
+    name: "test",
 });
+el.unset(entity);
 
-el.set({
-    name: "Vasyl",
-});
+console.log(el);
 
-console.log(el.toArray());
-console.log(el2.toArray());
-console.log(el3.toArray());
+const mapOperator = (entity: any, entities: any) => {
+    if (entity !== 2) entities.set(entity);
+};

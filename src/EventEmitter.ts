@@ -1,5 +1,3 @@
-export type TListenerFn<T> = (data: T) => any;
-
 interface IListener<T> {
     id: number;
     fn: TListenerFn<T>;
@@ -7,18 +5,19 @@ interface IListener<T> {
 }
 
 interface IListenerMapValue<T> {
-    event: string;
+    eventType: string;
     listener: IListener<T>;
 }
 
+export type TListenerFn<T> = (data: T) => any;
 export class EventEmitter<T> {
 
-    private listeners: { [event: string]: IListener<T>[]; } = {};
+    private listeners: { [eventType: string]: IListener<T>[]; } = {};
     private listenersMap: { [listenerId: string]: IListenerMapValue<T> } = {}; // `listener id => event name` map
     private nextListenerId = 0;
 
-    public on(event: string, fn: TListenerFn<T>, context?: any): number {
-        const listeners = this.listeners[event] || (this.listeners[event] = []);
+    public on(eventType: string, fn: TListenerFn<T>, context?: any): number {
+        const listeners = this.listeners[eventType] || (this.listeners[eventType] = []);
 
         const id = this.nextListenerId;
         this.nextListenerId += 1;
@@ -26,7 +25,7 @@ export class EventEmitter<T> {
         const listener = { id, fn, context }
         listeners.push(listener);
         this.listenersMap[id] = {
-            event,
+            eventType,
             listener
         };
 
@@ -38,7 +37,7 @@ export class EventEmitter<T> {
 
         if (!meta) return;
 
-        const listeners = this.listeners[meta.event];
+        const listeners = this.listeners[meta.eventType];
         const index = listeners.indexOf(meta.listener);
 
         if (index === -1) return;
@@ -46,7 +45,7 @@ export class EventEmitter<T> {
         listeners.splice(index, 1);
         delete this.listenersMap[listenerId];
 
-        if (listeners.length === 0) delete this.listeners[meta.event];
+        if (listeners.length === 0) delete this.listeners[meta.eventType];
     }
 
     public emit(event: string, data: T): void {
