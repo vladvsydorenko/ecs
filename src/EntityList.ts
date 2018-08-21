@@ -18,7 +18,7 @@ export class EntityList<T_Entity> extends EntityListBase<T_Entity> {
 
     private transform: TEntityListTransform<T_Entity> = null;
 
-    constructor(idKey: string = "idKey", transform: TEntityListTransform<T_Entity> = null) {
+    constructor(idKey: string = "id", transform: TEntityListTransform<T_Entity> = null) {
         super(idKey);
         this.transform = transform;
     }

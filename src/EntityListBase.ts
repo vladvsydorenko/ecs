@@ -17,7 +17,7 @@ export class EntityListBase<
     protected entityContainers: IEntityContainer[] = [];
     protected entityContainersMap: { [entityId: string]: IEntityContainer; } = {};
 
-    constructor(idKey: string = "idKey") {
+    constructor(idKey: string = "id") {
         this.idKey = idKey;
     }
 
