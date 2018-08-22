@@ -1,19 +1,22 @@
-# ECS
+# RES
+Reactive Entity Systems is a simple javascript library inspired by [Unity3d ECS](https://unity3d.com/learn/tutorials/topics/scripting/introduction-ecs).
 
 # Getting Started
 
 ## Install
 
-`npm install @vladnet/ecs`
+`npm install @vladnet/res`
 
 or
 
-`yarn add @vladnet/ecs`
+`yarn add @vladnet/res`
 
 ## Quick example
 
 Next system updates when someone puts an entity passing any filter described in `groups`:
 ```ts
+import { EntityManager, ISystem } from "@vladnet/res";
+
 const system: ISystem<any> = {
     groups: {
         userActions: entity => entity.type === "userAction",

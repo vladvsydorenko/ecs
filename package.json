@@ -1,7 +1,7 @@
 {
-  "name": "@vladnet/ecs",
+  "name": "@vladnet/res",
   "version": "1.0.0-a",
-  "description": "Entity Component System for Javascript. Inspired by Unity3D",
+  "description": "Reactive Entity Systems is a simple javascript library inspired by Unity3d ECS",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
