@@ -30,7 +30,7 @@ export enum EEntityManagerEventTypes {
 }
 
 export class EntityManager<
-    T,
+    T = any,
     T_Groups extends IEntityManagerGroups = IEntityManagerGroups
 > {
     public groups: Readonly<T_Groups> = Object.freeze({} as any);
@@ -40,9 +40,11 @@ export class EntityManager<
     private groupTransforms: EntityList<IEntityManagerGroupTransform<T>>;
 
     private parent: EntityManager<any>;
-    private parentListenerIds: number[] = [];
+    private parentListenerIds: Symbol[] = [];
 
     private eventEmitter = new EventEmitter();
+
+    static nextIdInc = 0;
 
     constructor(options: IEntityManagerOptions = {}) {
         this.idKey = options.idKey || "id";
@@ -94,9 +96,14 @@ export class EntityManager<
         else this.unsetLocal(data);
     }
 
+    public setMany(datas: T[]): void {
+        datas.forEach(this.set, this);
+    }
+
     public setLocal(data: T): void {
         let isSet = false;
         let isUnset = false;
+
         this.groupTransforms.toArray().forEach(({ id, transform }) => {
             const result = transform(data);
             const group = this.groupEntityLists.get(id);
@@ -104,13 +111,14 @@ export class EntityManager<
             if (result === false) {
                 group.unset(data);
                 isUnset = !isSet;
-                return;
+            }
+            else {
+                const entity = result === true ? data : result;
+                group.set(entity);
+                isSet = true;
+                isUnset = false;
             }
 
-            const entity = result === true ? data : result;
-            group.set(entity);
-            isSet = true;
-            isUnset = false;
         });
 
         if (isSet) this.eventEmitter.emit(EEntityManagerEventTypes.set, data);
@@ -141,19 +149,23 @@ export class EntityManager<
         this.parent = undefined;
     }
 
-    public on(eventId: string, listener: TEventListener<T>, thisArg?: any): number {
+    public on(eventId: string, listener: TEventListener<T>, thisArg?: any): Symbol {
         return this.eventEmitter.on(eventId, listener, thisArg);
     }
 
-    public off(listenerId: number): void {
+    public off(listenerId: Symbol): void {
         this.eventEmitter.off(listenerId);
     }
 
-    public branch(options: IEntityManagerOptions) {
+    public branch(options?: IEntityManagerBranchOptions) {
         return new EntityManager({
             parent: this,
             idKey: this.idKey,
-            groups: options.groups,
+            groups: options ? options.groups : undefined,
         });
+    }
+
+    static generateId(): Symbol {
+        return Symbol("entityId");
     }
 }

@@ -1,37 +1,41 @@
-import { EntityManager } from "./EntityManager";
+import { SystemManager } from "./SystemManager";
+import { EntityManager, EEntityManagerEventTypes } from "./EntityManager";
 
-const em = new EntityManager<any>({ idKey: "id", groups: {
-    "all": () => true,
-} });
-const em2 = em.branch({
-    groups: {
-        "users": entity => typeof entity.name === "string",
-    }
-});
-const em3 = em2.branch({
-    groups: {
-        "users": entity => (
-            typeof entity.name === "string" &&
-            typeof entity.password === "string"
-        ),
-    }
+const sm = new SystemManager({
+    idKey: "id",
+    systems: [
+        {
+            start(entities) {
+                entities.groupMany({
+                    all: () => true,
+                });
+
+                const entity = {
+                    id: EntityManager.generateId(),
+                    name: "Test",
+                };
+                entities.set(entity);
+                entities.set({
+                    ...entity,
+                    name: "Not Test",
+                });
+
+                // let arr = [];
+                // for (let i = 0; i < 100; i++) {
+                //     arr.push({
+                //         id: EntityManager.generateId(),
+                //         name: `Test ${i}`,
+                //     });
+                // }
+                // console.time("setMany");
+                // entities.setMany(arr);
+                // console.timeEnd("setMany");
+            },
+            update(entities) {
+                console.log(entities.groups.all);
+            }
+        }
+    ]
 });
 
-em.set({
-    id: "1",
-    name: "Test User",
-});
-
-em3.set({
-    id: "2",
-    name: "Another Test User",
-});
-
-em2.set({
-    id: "3",
-    name: "Another Test User",
-    password: "superPassword",
-});
-
-console.log(em2.groups);
-console.log(em3.groups);
+sm.start();

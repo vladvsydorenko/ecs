@@ -1,5 +1,5 @@
 interface IEventListenerContainer<T_Data> {
-    id: number;
+    id: Symbol;
     eventId: string;
     listener: TEventListener<T_Data>;
     thisArg: any;
@@ -10,13 +10,13 @@ export type TEventListener<T_Data> = (data: T_Data) => any;
 export class EventEmitter<T_Data> {
 
     private listenerContainers: { [eventId: string]: IEventListenerContainer<T_Data>[]; } = {};
-    private sortedListenerContainers: { [listenerId: number]: IEventListenerContainer<T_Data>; } = {};
+    private sortedListenerContainers: { [listenerId: string]: IEventListenerContainer<T_Data>; } = {};
     private nextListenerId = 0;
 
-    public on(eventId: string, listener: TEventListener<T_Data>, thisArg?: any): number {
+    public on(eventId: string, listener: TEventListener<T_Data>, thisArg?: any): Symbol {
         if (!this.listenerContainers[eventId]) this.listenerContainers[eventId] = [];
 
-        const id = this.nextListenerId++
+        const id = Symbol();
         const container = {
             id,
             listener,
@@ -25,13 +25,13 @@ export class EventEmitter<T_Data> {
         };
 
         this.listenerContainers[eventId].push(container);
-        this.sortedListenerContainers[id] = container;
+        this.sortedListenerContainers[id as any] = container;
 
         return id;
     }
 
-    public off(listenerId: number) {
-        const listener = this.sortedListenerContainers[listenerId];
+    public off(listenerId: Symbol) {
+        const listener = this.sortedListenerContainers[listenerId as any];
 
         if (!listener) return;
 
@@ -40,7 +40,7 @@ export class EventEmitter<T_Data> {
         const index = listeners.indexOf(listener);
         listeners.splice(index, 1);
 
-        delete this.sortedListenerContainers[listenerId];
+        delete this.sortedListenerContainers[listenerId as any];
     }
 
     public emit(eventId: string, data: T_Data) {
