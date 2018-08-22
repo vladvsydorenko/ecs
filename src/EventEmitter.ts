@@ -9,13 +9,12 @@ export type TEventListener<T_Data> = (data: T_Data) => any;
 
 export class EventEmitter<T_Data> {
 
-    private listenerContainers: { [listenerId: number]: IEventListenerContainer<T_Data>; } = {};
-    private eventIdToListenersMap: { [eventId: string]: IEventListenerContainer<T_Data>[]; } = {};
-
+    private listenerContainers: { [eventId: string]: IEventListenerContainer<T_Data>[]; } = {};
+    private sortedListenerContainers: { [listenerId: number]: IEventListenerContainer<T_Data>; } = {};
     private nextListenerId = 0;
 
     public on(eventId: string, listener: TEventListener<T_Data>, thisArg?: any): number {
-        if (!this.eventIdToListenersMap[eventId]) this.eventIdToListenersMap[eventId] = [];
+        if (!this.listenerContainers[eventId]) this.listenerContainers[eventId] = [];
 
         const id = this.nextListenerId++
         const container = {
@@ -25,27 +24,27 @@ export class EventEmitter<T_Data> {
             eventId,
         };
 
-        this.eventIdToListenersMap[eventId].push(container);
-        this.listenerContainers[id] = container;
+        this.listenerContainers[eventId].push(container);
+        this.sortedListenerContainers[id] = container;
 
         return id;
     }
 
     public off(listenerId: number) {
-        const listener = this.listenerContainers[listenerId];
+        const listener = this.sortedListenerContainers[listenerId];
 
-        if (!listener) throw new Error(`There is no listener with id "${listenerId}"`);
+        if (!listener) return;
 
-        const listeners = this.eventIdToListenersMap[listener.eventId]
+        const listeners = this.listenerContainers[listener.eventId]
 
         const index = listeners.indexOf(listener);
         listeners.splice(index, 1);
 
-        delete this.listenerContainers[listenerId];
+        delete this.sortedListenerContainers[listenerId];
     }
 
     public emit(eventId: string, data: T_Data) {
-        const listeners = this.eventIdToListenersMap[eventId];
+        const listeners = this.listenerContainers[eventId];
         if (!listeners) return;
 
         listeners
@@ -55,7 +54,7 @@ export class EventEmitter<T_Data> {
     }
 
     public clear() {
+        this.sortedListenerContainers = {};
         this.listenerContainers = {};
-        this.eventIdToListenersMap = {};
     }
 }
