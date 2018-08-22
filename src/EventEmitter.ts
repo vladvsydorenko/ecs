@@ -11,7 +11,7 @@ export class EventEmitter<T_Data> {
 
     private listenerContainers: { [eventId: string]: IEventListenerContainer<T_Data>[]; } = {};
     private sortedListenerContainers: { [listenerId: string]: IEventListenerContainer<T_Data>; } = {};
-    private nextListenerId = 0;
+    private isMuted = false;
 
     public on(eventId: string, listener: TEventListener<T_Data>, thisArg?: any): Symbol {
         if (!this.listenerContainers[eventId]) this.listenerContainers[eventId] = [];
@@ -44,6 +44,8 @@ export class EventEmitter<T_Data> {
     }
 
     public emit(eventId: string, data: T_Data) {
+        if (this.isMuted) return;
+
         const listeners = this.listenerContainers[eventId];
         if (!listeners) return;
 
@@ -56,5 +58,13 @@ export class EventEmitter<T_Data> {
     public clear() {
         this.sortedListenerContainers = {};
         this.listenerContainers = {};
+    }
+
+    public mute() {
+        this.isMuted = true;
+    }
+
+    public unmute() {
+        this.isMuted = false;
     }
 }

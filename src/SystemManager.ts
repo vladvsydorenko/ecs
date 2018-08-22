@@ -30,8 +30,9 @@ export class SystemManager<T = any> {
 
     constructor(options: ISystemManagerOptions = { idKey: "id" }) {
 
+        this.idKey = this.idKey;
         this.entities = new EntityManager<T>({
-            idKey: options.idKey,
+            idKey: this.idKey,
             groups: { all: () => true, },
         });
 
@@ -73,6 +74,7 @@ export class SystemManager<T = any> {
                 container.branchListenerIds = [
                     branch.on(EEntityManagerEventTypes.set, updateHandler),
                     branch.on(EEntityManagerEventTypes.unset, updateHandler),
+                    branch.on(EEntityManagerEventTypes.update, updateHandler),
                 ];
             }
 

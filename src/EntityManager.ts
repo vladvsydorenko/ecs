@@ -2,7 +2,7 @@ import { EntityList } from "./EntityList";
 import { TEventListener, EventEmitter } from "./EventEmitter";
 
 interface IEntityManagerGroupTransform<T> {
-    id: string;
+    id: string | Symbol;
     transform: TEntityManagerTransformFn<T, any>;
 }
 
@@ -27,6 +27,7 @@ export interface IEntityManagerGroups { [groupId: string]: EntityList<any>; }
 export enum EEntityManagerEventTypes {
     set = "set",
     unset = "unset",
+    update = "update",
 }
 
 export class EntityManager<
@@ -34,10 +35,12 @@ export class EntityManager<
     T_Groups extends IEntityManagerGroups = IEntityManagerGroups
 > {
     public groups: Readonly<T_Groups> = Object.freeze({} as any);
+    public version = Symbol();
 
     private idKey: string;
     private groupEntityLists: EntityList<EntityList>;
     private groupTransforms: EntityList<IEntityManagerGroupTransform<T>>;
+    private lastEntity: T = null;
 
     private parent: EntityManager<any>;
     private parentListenerIds: Symbol[] = [];
@@ -97,7 +100,29 @@ export class EntityManager<
     }
 
     public setMany(datas: T[]): void {
+        const versionBefore = this.version;
+
+        this.eventEmitter.mute();
+
         datas.forEach(this.set, this);
+
+        this.eventEmitter.unmute();
+
+        // if any of datas went to any of groups
+        if (versionBefore !== this.version) this.eventEmitter.emit(EEntityManagerEventTypes.update, this.lastEntity);
+    }
+
+    public unsetMany(datas: (T | string)[]): void {
+        const versionBefore = this.version;
+
+        this.eventEmitter.mute();
+
+        datas.forEach(this.unset, this);
+
+        this.eventEmitter.unmute();
+
+        // if any of datas went to any of groups
+        if (versionBefore !== this.version) this.eventEmitter.emit(EEntityManagerEventTypes.update, this.lastEntity);
     }
 
     public setLocal(data: T): void {
@@ -106,15 +131,26 @@ export class EntityManager<
 
         this.groupTransforms.toArray().forEach(({ id, transform }) => {
             const result = transform(data);
-            const group = this.groupEntityLists.get(id);
+            const group = this.groupEntityLists.get(id as any);
 
             if (result === false) {
-                group.unset(data);
-                isUnset = !isSet;
+                const unsetResult = group.unset(data);
+
+                if (unsetResult) {
+                    isUnset = !isSet;
+
+                    this.lastEntity = data;
+                    this.version = Symbol();
+                }
             }
             else {
                 const entity = result === true ? data : result;
+
                 group.set(entity);
+
+                this.lastEntity = data;
+                this.version = Symbol();
+
                 isSet = true;
                 isUnset = false;
             }
@@ -127,18 +163,24 @@ export class EntityManager<
 
     public unsetLocal(data: T | string): void {
         this.groupTransforms.toArray().forEach(({ id }) => {
-            const group = this.groupEntityLists.get(id);
-            group.unset(data);
+            const group = this.groupEntityLists.get(id as any);
+            const result = group.unset(data);
+
+            if (result) {
+                this.lastEntity = result;
+                this.version = Symbol();
+            }
         });
 
         this.eventEmitter.emit(EEntityManagerEventTypes.unset, data);
     }
 
     public setParent(parent: EntityManager<any>): void {
+        if (this.parent) this.unsetParent();
         this.parent = parent;
         this.parentListenerIds = [
             parent.on(EEntityManagerEventTypes.set, this.setLocal, this),
-            parent.on(EEntityManagerEventTypes.unset, this.unsetLocal, this)
+            parent.on(EEntityManagerEventTypes.unset, this.unsetLocal, this),
         ];
     }
 

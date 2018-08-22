@@ -1,130 +1,254 @@
 # ECS
-Simple ecs implementation, inspired by [Unity3d ECS](https://unity3d.com/learn/tutorials/topics/scripting/introduction-ecs).
 
 # Getting Started
-## Installation
-### npm
+
+## Install
+
 `npm install @vladnet/ecs`
 
-### yarn
+or
+
 `yarn add @vladnet/ecs`
 
+## Quick example
+
+Next system updates when someone puts an entity passing any filter described in `groups`:
 ```ts
-import { EntityManager, SystemManager } from "@vladnet/ecs";
+const system: ISystem<any> = {
+    groups: {
+        userActions: entity => entity.type === "userAction",
+        requests: entity => entity.type === "request",
+    },
+
+    update(entities: EntityManager<any>, system: ISystem<any>) {
+        console.log(entities.groups.userActions.toArray());
+        console.log(entities.groups.requests.toArray());
+    },
+};
 ```
 
-## Entities
-Entities are managed by `EntityManager`.
-There are only two methods to work with entities, `set` and `unset`.
+Next, let's set some entity. To do that, just describe a start method.
+In other way our system will not update ever, because there are no entities yet.
 
-### Set
-Set *without id* creates new entity, set *with id* updates existed one.
 ```ts
-console.log(em.length); // 0
-
-// create new entity
-let myEntity = em.set({
-    name: "Petryk",
-});
-console.log(myEntity); // { id: "entity_1", name: "Petryk", }
-console.log(em.length); // 1
-
-// update existed one
-myEntity = em.set({
-    id: newEntity.id,
-    name: "Vasylko",
-}); 
-console.log(myEntity); //{ id: "entity_1", name: "Vasylko", }
-console.log(em.length); // 1
+const system: ISystem<any> = {
+    // groups...
+    // update....
+    start(entities: EntityManager<any>, system: ISystem<any>) {
+        // will queue update after start method
+        // because next entity will successfully added to "userActions" group
+        entities.set({
+            id: EntityManager.generateId(),
+            type: "userAction",
+            action: "click"
+        });
+    }
+};
 ```
 
-### Unset
-Just pass an entity id.
+Setting entities that don't pass any group doesn't trigger update of your system.
+Setting entities during update also doesn't trigger update. Only other systems' updates or setting from async operations will trigger update.
+
+## Branch
+
+System receives a `branch` of the main entity manager. You could fork it deeper.
 ```ts
-em.unset(myEntity.id);
-```
-
-### Immutable
-EntityManager never mutates your data.
-```ts
-// create new entity
-const newEntity = em.set({
-    name: "Petryk",
-});
-console.log(newEntity); // { id: "entity_1", name: "Petryk", }
-
-// update existed one
-const updatedEntity = em.set({
-    id: newEntity.id,
-    name: "Vasylko",
-}); 
-console.log(updatedEntity); //{ id: "entity_1", name: "Vasylko", }
-console.log(newEntity === updatedEntity); // false
-```
-
-### forEach/filter/find/toArray etc
-EntityManager has few methods working in the same way as such methofs in `Array`: 
-`forEach`, `filter`, `find`, `some`, `every`.
-
-Sure thing, you can get plain array by `em.toArray()`.
-
-### Observe
-You could subscribe to `set` or `unset` events.
-```ts
-// on set
-em.on(EEntityManagerEventTypes.set, (entity: IEntity) => {
-    // entity was set (new or updated)
-}, context /* `this` for listener */);
-
-// on unset
-em.on(EEntityManagerEventTypes.unset, (entity: IEntity) => {
-    // entity was unset, do forget it and move forward
-}, context /* `this` for listener */);
-```
-
-## Systems
-
-To manage you entities you should write a system.
-System is just an object having `update` method and optional `start` method.
-
-```ts
-interface ISystem {
-    update: (em: EntityManager<IEntity>) => any;
-    start?: (em: EntityManager<IEntity>) => any;
-}
-```
-
-```ts
-const em = new EntityManager();
-const sm = new SystemManager(em);
-
-// add a system
-const id = sm.add({
-    update(em) {
-        em
-            .filter(entity => entity.name === "Vasylko")
-            .forEach(entity => {
-                console.log(`Another one ${entity.name}!`);
-            });
+const myBranch: EntityManager<any> = entities.branch({
+    groups: {
+        all: entity => entity.name === "Petryk",
     }
 });
-
-// remove a system
-sm.remove(id);
 ```
 
-`update` will be run each time entity manager changes (both `set` or `unset` actions).  It will not run again for system own changes. SystemManager saves timestamp when its EntityManager and systems were updated.
+`Branch` has filtered by groups entities, but setting/unsetting entities is always starting from the top-level parent.
 
-`start` will be run only once at SystemManager start.
+It means that `myBranch.set(myEntity)` will set it to the SystemManager's main entity manager and then it will flow down deeper by branches.
 
-### Asynchronous
-Systems are asynchronous, means you could update EntityManager at anytime and all other systems will update.
+Actually, `branch` is just an `EntityManager` having `parent` which is also `EntityManager`.
+Branch delegates setting/unsetting to its parent and listens for parent's updates.
+Then, on parent update branch filters and groups an entity.
+It was done so because an entity could pass no parent's filters, and naturally, you also shouldn't have it in your branch.
 
-### Start/Stop
-```
-// start all systems
+But if you need to set an entity locally, without `parent->branches` flow, use `branch.setLocal(entity)`, that will set and entity immediately to the branch and parent will not know about it. Ha ha.
+
+## Start
+
+```ts
+const sm = new SystemManager({
+    // key in your entities representing entity id
+    idKey: "id",
+    systems: [
+        system1,
+        system2,
+        ...restSystems,
+    ]
+});
+
 sm.start();
+```
 
-// stop all systems
+## Async
+
+You could set an entity at anytime, and all systems that need it will update.
+
+# API
+There is a quick overview of API.
+
+## EntitManager
+### Create
+```ts
+const em = new EntityManager({
+    idKey: "id", // default: "id", member in entity to store id
+    parent: new EntityManager(), // default: null
+    groups: { // default: {}
+        all: () => true, // register new group "all" accepting all entities
+        users: entity => typeof entity.name === "string", // group that filters entities a bit
+        mapped: entity => ({ ...entity, isUser: tue }), // group that maps entities
+    }
+});
+```
+
+### Branch
+```ts
+// create a branch
+const branch = em.branch({
+    groups: {
+        all: () => false, // somewhy create a forever empty group
+    }
+});
+```
+
+### Groups
+```ts
+// register new group
+branch.group("test", () => true);
+
+// register a bunch of groups
+branch.groupMany({
+    test2: () => true,
+    test3: () => true,
+});
+
+// unregister a group
+branch.ungroup("test");
+
+// get groups
+branch.getGroups();
+// or
+branch.groups;
+```
+
+### Setting/unsetting
+```ts
+// start setting flow from the top level parent
+branch.set({
+    id: EntityManager.generateId(),
+    name: "Test",
+});
+
+// set a bunch of entities
+branch.setMany([
+    {
+        id: EntityManager.generateId(),
+        name: "Test",
+    },
+    {
+        id: EntityManager.generateId(),
+        name: "Test2",
+    }
+]);
+
+// set directly, omitting parent
+branch.setLocal();
+
+// start unsetting flow from the top level parent
+branch.unset(entity);
+branch.unset(entity.id);
+
+// unset directly, omitting parent
+branch.unsetLocal();
+```
+
+### Parent
+```ts
+// set a branch parent directly
+// will detach the branch from a previous parent if any
+branch.setParent(new EntityManager<any>());
+
+// unset current parrent if any
+branch.unsetParent();
+```
+
+### Events
+```ts
+// subscribe to set/unset event
+branch.on(EEntityManagerEventTypes.set, entity => {}, thisArg);
+branch.on(EEntityManagerEventTypes.unset, entity => {}, thisArg);
+
+// subscribe to update event - an event firing after setMany or unsetMany
+const listenerId = branch.on(EEntityManagerEventTypes.update, () => {}, thisArg);
+
+// unsubscribe
+branch.off(listenerId);
+```
+
+## SystemManager
+
+### Create
+
+```ts
+const sm = new SystemManager({ idKey: "id" });
+```
+
+### Add systems
+```ts
+sm.add(system);
+sm.addMany([...systems]);
+```
+
+### Start/stop
+
+```ts
+sm.start();
 sm.stop();
 ```
+
+## EntityList
+
+List of entities. `EntityManager's` `Groups` are represented by `EntityList`.
+
+(also, `EntityManager` uses `EntitList` to store entities, groups etc)
+
+### Create
+```ts
+const el = new EntityList<any>({
+    id: "listId",
+    idKey: "id",
+});
+```
+
+### Set/unset
+```ts
+el.set({
+    id: EntityManager.generateId(),
+    name: "Test",
+});
+
+el.unset({ id: entity.id });
+el.unset(entity.id);
+```
+
+### Get
+```ts
+const entity = el.get({ id: entity.id });
+const entity = el.get(entity.id);
+```
+
+### toArray/toObject
+```ts
+const arr = el.toArray();
+const obj = el.toObject();
+
+```
+
+
