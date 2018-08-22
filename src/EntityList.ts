@@ -11,7 +11,6 @@ export class EntityList<T = any> {
     private idKey: string;
     private entities: T[] = [];
     private sortedEntities: { [entityId: string]: T; } = {};
-    private renderedEntities: ReadonlyArray<T> = Object.freeze([]);
 
     constructor(options: IEntityListOptions = {}) {
         this.id = String(options.id);
