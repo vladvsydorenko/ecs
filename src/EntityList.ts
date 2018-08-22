@@ -1,13 +1,21 @@
+export interface IEntityListOptions {
+    id?: string;
+    idKey?: string;
+}
+
 export class EntityList<T = any> {
 
     public length = 0;
 
+    private id: string;
     private idKey: string;
     private entities: T[] = [];
     private sortedEntities: { [entityId: string]: T; } = {};
+    private renderedEntities: ReadonlyArray<T> = Object.freeze([]);
 
-    constructor(options = { idKey: "id", }) {
-        this.idKey = options.idKey;
+    constructor(options: IEntityListOptions = {}) {
+        this.id = String(options.id);
+        this.idKey = options.idKey || "id";
     }
 
     public set(data: T): T {
@@ -36,7 +44,11 @@ export class EntityList<T = any> {
     }
 
     public toArray(): ReadonlyArray<T> {
-        return Object.freeze(this.entities);
+        return Object.freeze([ ...this.entities ]);
+    }
+
+    public toObject(): Readonly<{ [entity: string]: T }> {
+        return Object.freeze({ ...this.sortedEntities });
     }
 
     private remove(data: T): T | undefined {
